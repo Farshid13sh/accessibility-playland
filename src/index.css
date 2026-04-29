@@ -18,7 +18,7 @@
 
 /* Far-Sightedness / Blurry Vision */
 .filter-blur {
-  filter: blur(4px);
+  filter: blur(5px);
 }
 
 /* Sunshine (already have, but let's refine) */
