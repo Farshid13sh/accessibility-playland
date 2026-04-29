@@ -10,3 +10,18 @@
   overscroll-behavior: none; 
   touch-action: none;
 }
+
+/* Color Blindness Simulation */
+.filter-grayscale {
+  filter: grayscale(100%);
+}
+
+/* Far-Sightedness / Blurry Vision */
+.filter-blur {
+  filter: blur(4px);
+}
+
+/* Sunshine (already have, but let's refine) */
+.filter-sunshine {
+  filter: brightness(1.8) saturate(0.2);
+}
