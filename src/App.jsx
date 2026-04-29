@@ -1,121 +1,79 @@
+import { Canvas } from '@react-three/fiber'
+import { OrbitControls, KeyboardControls, Stats } from '@react-three/drei'
+import { Player } from './Player.jsx'
+import './index.css'
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+
+// This defines which keys do what
+const map = [
+  { name: 'forward', keys: ['ArrowUp', 'KeyW'] },
+  { name: 'backward', keys: ['ArrowDown', 'KeyS'] },
+  { name: 'left', keys: ['ArrowLeft', 'KeyA'] },
+  { name: 'right', keys: ['ArrowRight', 'KeyD'] },
+]
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [activeImpairment, setActiveImpairment] = useState(null)
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <KeyboardControls map={map}>
+      <div className={`relative w-full h-screen transition-all duration-500 overflow-hidden ${
+        activeImpairment === 'sunshine' ? 'brightness-150 saturate-50' : 'bg-slate-900'
+      }`}>
+        
+        {/* TUNNEL VISION - Responsive Gradient */}
+        {activeImpairment === 'tunnel' && (
+          <div 
+            className="absolute inset-0 z-20 pointer-events-none"
+            style={{
+              background: 'radial-gradient(circle at center, transparent 15%, black 60%)'
+            }}
+          />
+        )}
+
+        {/* HUD - Responsive Text & Padding */}
+        <div className="absolute top-4 left-4 right-4 z-30 flex justify-between items-start pointer-events-none">
+          <div className="p-3 md:p-4 bg-white/10 backdrop-blur-md rounded-lg text-white border border-white/20">
+            <h1 className="text-sm md:text-xl font-bold uppercase tracking-tighter">Accessibility Lab</h1>
+            <p className="text-[10px] md:text-xs text-emerald-400 font-mono">
+               {activeImpairment ? `MODE: ${activeImpairment}` : 'MODE: NORMAL'}
+            </p>
+          </div>
+          
+          {/* Mobile Instruction Hint */}
+          <div className="md:hidden p-2 bg-black/40 rounded text-[10px] text-white">
+            Tap screen to move
+          </div>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+
+        {/* The Canvas automatically handles window resize */}
+        <Canvas 
+          shadows 
+          camera={{ position: [10, 10, 10], fov: 35 }}
+          dpr={[1, 2]} // Optimizes resolution for high-DPI (Retina) screens
         >
-          Count is {count}
-        </button>
-      </section>
+          <ambientLight intensity={1.5} />
+          <Player onZoneEnter={setActiveImpairment} />
+          
+          {/* We use smaller grid for mobile feel */}
+          <gridHelper args={[20, 20, 0x444444, 0x222222]} />
+          
+          {/* Red Zone */}
+          <mesh position={[5, 0.01, 5]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[4, 4]} />
+            <meshStandardMaterial color="red" transparent opacity={0.3} />
+          </mesh>
 
-      <div className="ticks"></div>
+          {/* Blue Zone */}
+          <mesh position={[-5, 0.01, -5]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[4, 4]} />
+            <meshStandardMaterial color="blue" transparent opacity={0.3} />
+          </mesh>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+          <OrbitControls makeDefault enableDamping />
+        </Canvas>
+      </div>
+    </KeyboardControls>
   )
 }
 
