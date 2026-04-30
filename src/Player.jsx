@@ -1,54 +1,50 @@
 import { useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { useKeyboardControls } from '@react-three/drei'
 import * as THREE from 'three'
 
 export function Player({ onZoneEnter, activeImpairment, isFixed }) {
   const meshRef = useRef()
   const [, getKeys] = useKeyboardControls()
+  const { camera } = useThree()
 
   useFrame((state, delta) => {
     const { forward, backward, left, right } = getKeys()
+    const speed = (activeImpairment === 'motor' && !isFixed) ? 1.5 : 5
     
-    // Normal speed is 7, Motor speed is 2
-    let speed = (activeImpairment === 'motor' && !isFixed) ? 2 : 7
-    const movement = new THREE.Vector3(0, 0, 0)
+    const direction = new THREE.Vector3()
+    const frontVector = new THREE.Vector3(0, 0, Number(backward) - Number(forward))
+    const sideVector = new THREE.Vector3(Number(left) - Number(right), 0, 0)
 
-    if (forward) movement.z -= speed * delta
-    if (backward) movement.z += speed * delta
-    if (left) movement.x -= speed * delta
-    if (right) movement.x += speed * delta
-
-    // Jitter logic
-    if (activeImpairment === 'motor' && !isFixed) {
-      movement.x += (Math.random() - 0.5) * 0.25
-      movement.z += (Math.random() - 0.5) * 0.25
-    }
+    direction.subVectors(frontVector, sideVector).normalize().multiplyScalar(speed * delta).applyQuaternion(camera.quaternion)
+    direction.y = 0 
 
     if (meshRef.current) {
-      meshRef.current.position.add(movement)
+      meshRef.current.position.add(direction)
+      camera.position.copy(meshRef.current.position).add(new THREE.Vector3(0, 1.7, 0))
+
       const pos = meshRef.current.position
-      
-      const checkZone = (tx, tz, r = 3) => {
-        return pos.x > tx - r && pos.x < tx + r && pos.z > tz - r && pos.z < tz + r
+      const dists = {
+        motor: pos.distanceTo(new THREE.Vector3(12, 0, -12)),
+        sunshine: pos.distanceTo(new THREE.Vector3(-12, 0, 12)),
+        tunnel: pos.distanceTo(new THREE.Vector3(0, 0, -18)),
+        blur: pos.distanceTo(new THREE.Vector3(-12, 0, -12)),
+        colorblind: pos.distanceTo(new THREE.Vector3(12, 0, 12))
       }
 
-      // Check all 5 zones defined in App.jsx
-      if (checkZone(10, 10)) onZoneEnter('colorblind')
-      else if (checkZone(10, -10)) onZoneEnter('tunnel')
-      else if (checkZone(-10, -10)) onZoneEnter('blur')
-      else if (checkZone(-10, 10)) onZoneEnter('sunshine')
-      else if (checkZone(0, 0)) onZoneEnter('motor')
+      if (dists.motor < 3) onZoneEnter('motor')
+      else if (dists.sunshine < 3) onZoneEnter('sunshine')
+      else if (dists.tunnel < 4) onZoneEnter('tunnel')
+      else if (dists.blur < 3) onZoneEnter('blur')
+      else if (dists.colorblind < 3) onZoneEnter('colorblind')
       else onZoneEnter(null)
       
-      state.camera.lookAt(pos)
+      if (activeImpairment === 'motor' && !isFixed) {
+        camera.position.x += (Math.random() - 0.5) * 0.1
+        camera.position.y += (Math.random() - 0.5) * 0.1
+      }
     }
   })
 
-  return (
-    <mesh ref={meshRef} position={[0, 0.5, 0]}>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color="#10b981" />
-    </mesh>
-  )
+  return <mesh ref={meshRef}><capsuleGeometry args={[0.3, 1, 4]} /><meshStandardMaterial transparent opacity={0}/></mesh>
 }
