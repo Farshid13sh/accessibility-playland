@@ -36,7 +36,7 @@ export default function Experience() {
         {/* FIX 1: RESTORED BACK TO HOME LINK */}
         <Link 
           to="/" 
-          className="absolute top-6 left-6 px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold uppercase tracking-widest rounded-full z-[100] backdrop-blur-md border border-white/10 transition-all"
+          className="absolute top-6 left-6 px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold uppercase tracking-widest rounded-full z-100 backdrop-blur-md border border-white/10 transition-all"
         >
           ← Back to Home
         </Link>
@@ -61,7 +61,7 @@ export default function Experience() {
 
         {/* FIX 2: REPAIRED CODEFIX PANEL & SLIDER */}
         {activeImpairment && (
-          <div className="absolute top-10 right-10 w-80 bg-slate-900/90 p-8 rounded-3xl border border-white/10 text-white shadow-2xl backdrop-blur-xl z-[100]">
+          <div className="absolute top-10 right-10 w-80 bg-slate-900/90 p-8 rounded-3xl border border-white/10 text-white shadow-2xl backdrop-blur-xl z-100">
             <h2 className="text-yellow-400 font-black text-sm uppercase italic tracking-widest mb-4">
               {activeImpairment === 'sunshine' ? 'Visual Accessibility Lab' : 'Cognitive Load Lab'}
             </h2>
@@ -96,6 +96,10 @@ export default function Experience() {
             </div>
           </div>
         )}
+
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-black/55 border border-white/15 text-white/85 text-[10px] font-semibold tracking-wide z-100 pointer-events-none backdrop-blur-sm">
+          Click to start • Press Esc to exit
+        </div>
       </div>
     </KeyboardControls>
   )

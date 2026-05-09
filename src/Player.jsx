@@ -5,6 +5,7 @@ import * as THREE from 'three'
 
 export function Player({ onZoneEnter }) {
   const meshRef = useRef()
+  const lastZoneRef = useRef(null)
   const [, getKeys] = useKeyboardControls()
   const { camera } = useThree()
 
@@ -25,10 +26,16 @@ export function Player({ onZoneEnter }) {
 
       const benchDist = meshRef.current.position.distanceTo(new THREE.Vector3(0, 0, -8))
       const atmDist = meshRef.current.position.distanceTo(new THREE.Vector3(15, 0, -8))
-      
-      if (benchDist < 3.5) onZoneEnter('sunshine')
-      else if (atmDist < 3.5) onZoneEnter('concentration')
-      else onZoneEnter(null)
+
+      let nextZone = null
+      if (benchDist < 3.5) nextZone = 'sunshine'
+      else if (atmDist < 3.5) nextZone = 'concentration'
+
+      // Only notify when zone changes to avoid resetting slider state every frame.
+      if (nextZone !== lastZoneRef.current) {
+        lastZoneRef.current = nextZone
+        onZoneEnter(nextZone)
+      }
     }
   })
 
