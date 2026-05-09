@@ -115,6 +115,9 @@ export default function AccessibilityLab() {
     main.style.filter = "";
     
     if (tunnelOverlayRef.current) {
+      if (typeof tunnelOverlayRef.current._cleanup === "function") {
+        tunnelOverlayRef.current._cleanup();
+      }
       tunnelOverlayRef.current.remove();
       tunnelOverlayRef.current = null;
     }
@@ -146,30 +149,57 @@ export default function AccessibilityLab() {
     
     if (modeId === "tunnel-vision") {
       const overlay = document.createElement("div");
-      const sidebarWidth = window.matchMedia('(min-width: 768px)').matches ? 288 : 0;
       overlay.style.cssText = `
         position: fixed;
         pointer-events: none;
         background: rgba(0,0,0,0.97);
         z-index: 9998;
-        top: 0;
-        left: ${sidebarWidth}px;
-        right: 0;
-        bottom: 0;
         -webkit-mask-image: radial-gradient(circle 100px at 50% 50%, transparent 99px, black 100px);
         mask-image: radial-gradient(circle 100px at 50% 50%, transparent 99px, black 100px);
       `;
+
+      const setOverlayBounds = () => {
+        const rect = main.getBoundingClientRect();
+        overlay.style.top = `${rect.top}px`;
+        overlay.style.left = `${rect.left}px`;
+        overlay.style.width = `${rect.width}px`;
+        overlay.style.height = `${rect.height}px`;
+      };
+
+      const setMaskFromClientPoint = (clientX, clientY) => {
+        const rect = main.getBoundingClientRect();
+        const x = Math.min(Math.max(clientX - rect.left, 0), rect.width);
+        const y = Math.min(Math.max(clientY - rect.top, 0), rect.height);
+        overlay.style.webkitMaskImage = `radial-gradient(circle 100px at ${x}px ${y}px, transparent 99px, black 100px)`;
+        overlay.style.maskImage = `radial-gradient(circle 100px at ${x}px ${y}px, transparent 99px, black 100px)`;
+      };
+
+      setOverlayBounds();
+      setMaskFromClientPoint(window.innerWidth / 2, window.innerHeight / 2);
+
       tunnelOverlayRef.current = overlay;
       document.body.appendChild(overlay);
 
       const handleMouseMove = (e) => {
-        const x = e.clientX;
-        const y = e.clientY;
-        overlay.style.webkitMaskImage = `radial-gradient(circle 100px at ${x}px ${y}px, transparent 99px, black 100px)`;
-        overlay.style.maskImage = `radial-gradient(circle 100px at ${x}px ${y}px, transparent 99px, black 100px)`;
+        setMaskFromClientPoint(e.clientX, e.clientY);
       };
+
+      const handleTouchMove = (e) => {
+        const touch = e.touches[0];
+        if (!touch) return;
+        setMaskFromClientPoint(touch.clientX, touch.clientY);
+      };
+
+      window.addEventListener("resize", setOverlayBounds);
+      window.addEventListener("scroll", setOverlayBounds, true);
       document.addEventListener("mousemove", handleMouseMove);
-      overlay._cleanup = () => document.removeEventListener("mousemove", handleMouseMove);
+      document.addEventListener("touchmove", handleTouchMove, { passive: true });
+      overlay._cleanup = () => {
+        window.removeEventListener("resize", setOverlayBounds);
+        window.removeEventListener("scroll", setOverlayBounds, true);
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("touchmove", handleTouchMove);
+      };
     }
 
     if (modeId === "concentration") {
@@ -253,8 +283,7 @@ export default function AccessibilityLab() {
 
       <main ref={mainRef} className="flex-1 flex flex-col relative overflow-y-auto">
         
-        <header className="flex items-center justify-between p-6 bg-white border-b border-slate-200">
-          <h1 className="text-xl font-black text-slate-900 italic uppercase">Lab <span className="text-blue-600">v1.0</span></h1>
+        <header className="flex items-center justify-end p-6 bg-white border-b border-slate-200">
           <Link to="/experience" className="bg-blue-600 px-6 py-2 rounded-full text-white font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
             3D Experience →
           </Link>
