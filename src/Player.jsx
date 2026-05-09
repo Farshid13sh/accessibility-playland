@@ -23,9 +23,11 @@ export function Player({ onZoneEnter }) {
       meshRef.current.position.add(direction)
       camera.position.copy(meshRef.current.position).add(new THREE.Vector3(0, 1.7, 0))
 
-      // Spatial Detection: Bench is at [0, 0, -8]
-      const dist = meshRef.current.position.distanceTo(new THREE.Vector3(0, 0, -8))
-      if (dist < 3.5) onZoneEnter('sunshine')
+      const benchDist = meshRef.current.position.distanceTo(new THREE.Vector3(0, 0, -8))
+      const atmDist = meshRef.current.position.distanceTo(new THREE.Vector3(15, 0, -8))
+      
+      if (benchDist < 3.5) onZoneEnter('sunshine')
+      else if (atmDist < 3.5) onZoneEnter('concentration')
       else onZoneEnter(null)
     }
   })

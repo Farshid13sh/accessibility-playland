@@ -4,6 +4,8 @@ import { KeyboardControls, PointerLockControls } from '@react-three/drei'
 import { Link } from 'react-router-dom'
 import { Player } from './Player'
 import { Environment } from './Environment'
+import SunshineBench from './scenarios/SunshineBench'
+import ATMConcentration from './scenarios/ATMConcentration'
 
 const map = [
   { name: 'forward', keys: ['ArrowUp', 'KeyW'] },
@@ -14,26 +16,19 @@ const map = [
 
 export default function Experience() {
   const [activeImpairment, setActiveImpairment] = useState(null)
-  const [isFixed, setIsFixed] = useState(false)
-  const canvasRef = useRef(null)
-
-  const handleCheckCode = (val) => {
-    if (val === "1") setIsFixed(true)
-  }
+  const [fixLevel, setFixLevel] = useState(0)
+  const isFixed = fixLevel > 90
 
   const handleZoneChange = (zone) => {
     if (zone !== activeImpairment) {
       setActiveImpairment(zone)
-      setIsFixed(false)
+      setFixLevel(0)
     }
   }
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      // Remove any leftover popups
       document.querySelectorAll('[style*="z-index: 99999"]').forEach(el => el.remove())
-      // Remove tunnel vision overlay
       document.querySelectorAll('[style*="mask-image"]').forEach(el => el.remove())
     }
   }, [])
@@ -41,71 +36,58 @@ export default function Experience() {
   return (
     <KeyboardControls map={map}>
       <div className="relative w-full h-screen bg-black overflow-hidden">
-
-        {/* 3D Canvas */}
         <div 
-          ref={canvasRef}
           className={`absolute inset-0 transition-all duration-1000
-            ${activeImpairment === 'sunshine' && !isFixed ? 'filter brightness-[1.8] contrast-[0.4] saturate-[0.5]' : ''}
+            ${activeImpairment === 'sunshine' && !isFixed ? 'filter brightness-[1.8] contrast-[0.6]' : ''}
+            ${activeImpairment === 'concentration' && !isFixed ? 'filter saturate-[1.6]' : ''}
           `}
         >
-          <Canvas shadows>
+          <Canvas shadows camera={{ fov: 45 }}>
             <Suspense fallback={null}>
               <Player onZoneEnter={handleZoneChange} />
               <Environment />
+              
+              {activeImpairment === 'sunshine' && (
+                <SunshineBench isFixed={isFixed} fixLevel={fixLevel} />
+              )}
+
+              {activeImpairment === 'concentration' && (
+                <ATMConcentration isFixed={isFixed} fixLevel={fixLevel} />
+              )}
             </Suspense>
             <PointerLockControls />
           </Canvas>
         </div>
 
-        {/* Park Scenario Overlay (only when active) */}
         {activeImpairment && (
-          <div className="absolute top-10 right-10 w-80 bg-slate-900/90 p-8 rounded-2xl border border-white/10 text-white shadow-2xl backdrop-blur-xl z-50">
-            <h2 className="text-yellow-400 font-bold text-xl uppercase italic mb-4">Park Scenario</h2>
-            <p className="text-xs opacity-80 leading-relaxed mb-4">
-              The outdoor glare is washing out the Information Sign. Low-contrast screens are a major accessibility barrier.
-            </p>
-
-            <div className="bg-black p-4 rounded-lg font-mono text-[11px] border border-white/5">
-              <span className="text-blue-400">#vision-config</span> {'{'} <br />
-              <div className="pl-4 py-2">
-                brightness:{" "}
-                <input
-                  type="text"
-                  aria-label="Brightness configuration input"
-                  className="bg-slate-800 w-20 text-center rounded border border-white/20 mx-1 outline-none text-yellow-400 py-1 focus:outline-2 focus:outline-yellow-400"
-                  placeholder="..."
-                  autoFocus
-                  onChange={(e) => handleCheckCode(e.target.value)}
-                />
-                ;
-              </div>
-              {"}"}
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-96 bg-slate-900/95 p-6 rounded-3xl border border-white/10 text-white shadow-2xl backdrop-blur-xl z-50">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-yellow-400 font-black text-sm uppercase italic tracking-widest">
+                {activeImpairment === 'sunshine' ? 'Glare Reduction' : 'Cognitive Filter'}
+              </h2>
+              <span className="font-mono text-[10px] text-white/40">{fixLevel}%</span>
             </div>
-            <p className="text-[9px] mt-3 opacity-30 italic text-center text-white">
-              Hint: set to 1
-            </p>
 
-            {isFixed && (
-              <div className="mt-6 bg-emerald-500 py-3 rounded-xl text-center text-xs font-bold text-black uppercase">
-                ✓ Simulation Repaired
-              </div>
-            )}
+            <input 
+              type="range" 
+              min="0" max="100" 
+              value={fixLevel}
+              onChange={(e) => setFixLevel(parseInt(e.target.value))}
+              className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-yellow-400"
+            />
+            
+            <div className="mt-4 text-center">
+              {isFixed ? (
+                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest animate-pulse">✓ Simulation Optimized</span>
+              ) : (
+                <span className="text-[10px] font-medium text-white/30 uppercase tracking-tighter">Slide right to fix accessibility barriers</span>
+              )}
+            </div>
           </div>
         )}
 
-        {/* Controls Guide */}
-        <div className="absolute bottom-6 left-6 text-white/20 text-[9px] tracking-widest uppercase pointer-events-none">
-          WASD Walk • Click to Look • ESC to Unlock Mouse
-        </div>
-
-        {/* Back to Home Link - Simple, Clean */}
-        <Link
-          to="/"
-          aria-label="Back to home page"
-          className="absolute top-6 left-6 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-lg transition-colors focus:outline-4 focus:outline-blue-400 focus:outline-offset-2 z-40"
-        >
-          ← Back to Home
+        <Link to="/" className="absolute top-6 left-6 px-6 py-3 bg-white/10 hover:bg-white/20 text-white text-xs font-black uppercase tracking-widest rounded-full transition-all z-40">
+          ← Exit Lab
         </Link>
       </div>
     </KeyboardControls>
