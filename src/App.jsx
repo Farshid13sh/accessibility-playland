@@ -4,7 +4,7 @@ import Experience from './Experience'
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/accessibility-playland/">
       <Routes>
         <Route path="/" element={<AccessibilityLab />} />
         <Route path="/experience" element={<Experience />} />
