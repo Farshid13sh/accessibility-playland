@@ -72,6 +72,6 @@ function Beacon({ color, isFlashing }) {
 }
 
 function RealisticBench() {
-  const { scene } = useGLTF('/assets/Bench.glb')
+  const { scene } = useGLTF(`${import.meta.env.BASE_URL}assets/Bench.glb`)
   return <primitive object={scene} position={[0.5, 0, 1.1]} scale={0.01} rotation={[0, Math.PI / 2, 0]} castShadow />
 }
